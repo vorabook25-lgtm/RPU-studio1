@@ -1,0 +1,130 @@
+<?php 
+    session_start();
+    include('db.php');
+    $msg = "";
+
+    if (isset($_POST['reset_pass'])) {
+        $email = mysqli_real_escape_string($conn, $_POST['email']);
+        $phone = mysqli_real_escape_string($conn, $_POST['phone']);
+        $new_password = mysqli_real_escape_string($conn, $_POST['new_password']);
+
+        // 1. ตรวจสอบข้อมูล
+        $check = mysqli_query($conn, "SELECT * FROM users WHERE email = '$email' AND phone = '$phone'");
+        
+        if (mysqli_num_rows($check) > 0) {
+            // 2. เปลี่ยนรหัสผ่าน
+            $hashed_password = password_hash($new_password, PASSWORD_DEFAULT);
+            $sql = "UPDATE users SET password = '$hashed_password' WHERE email = '$email'";
+            
+            if (mysqli_query($conn, $sql)) {
+                echo "<script>
+                    alert('✅ เปลี่ยนรหัสผ่านสำเร็จ! กรุณาเข้าสู่ระบบด้วยรหัสใหม่'); 
+                    window.location='login.php';
+                </script>";
+            } else {
+                $msg = "❌ เกิดข้อผิดพลาดในการบันทึก";
+            }
+        } else {
+            $msg = "❌ ไม่พบข้อมูล! อีเมลหรือเบอร์โทรศัพท์ไม่ถูกต้อง";
+        }
+    }
+?>
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <title>ลืมรหัสผ่าน | RPU System</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        /* Theme หลัก: สีฟ้า (#00d2d3) เข้าชุดกับ Login */
+        body { background: #1a1a2e; font-family: 'Sarabun'; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; box-sizing: border-box; }
+        
+        .login-box { 
+            background: white; 
+            padding: 40px; 
+            border-radius: 20px; 
+            width: 100%; 
+            max-width: 400px; 
+            text-align: center; 
+            box-shadow: 0 15px 35px rgba(0,0,0,0.5); 
+            border-top: 5px solid #00d2d3; /* สีธีมหลัก */
+        }
+
+        .logo { 
+            width: 80px; height: 80px; 
+            background: #1a1a2e; color: #00d2d3; /* สีธีมหลัก */
+            border-radius: 50%; 
+            display: flex; align-items: center; justify-content: center; 
+            font-size: 35px; margin: 0 auto 20px; 
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        h2 { color: #1a1a2e; margin: 10px 0 10px; letter-spacing: 1px; }
+        p { color: #666; font-size: 14px; margin-bottom: 25px; }
+
+        .input-group { margin-bottom: 15px; position: relative; }
+        .input-group i { position: absolute; left: 15px; top: 14px; color: #888; z-index: 1; }
+        
+        input { 
+            width: 100%; padding: 12px 12px 12px 45px; 
+            border: 1px solid #ddd; border-radius: 30px; 
+            box-sizing: border-box; font-family: 'Sarabun'; 
+            font-size: 14px; transition: 0.3s;
+            background: #fff;
+        }
+        
+        /* Focus สีฟ้า */
+        input:focus { border-color: #00d2d3; outline: none; box-shadow: 0 0 5px rgba(0, 210, 211, 0.3); }
+
+        .btn-reset { 
+            width: 100%; padding: 12px; 
+            background: #1a1a2e; color: #00d2d3; /* ปุ่มสีพื้นเข้ม ตัวหนังสือฟ้า */
+            border: 1px solid #1a1a2e; border-radius: 30px; 
+            font-weight: bold; cursor: pointer; transition: 0.3s; 
+            font-size: 16px; margin-top: 10px; 
+        }
+        
+        .btn-reset:hover { background: #00d2d3; color: #1a1a2e; transform: translateY(-2px); }
+
+        .links { margin-top: 25px; font-size: 14px; border-top: 1px solid #eee; padding-top: 20px; }
+        .links a { color: #666; text-decoration: none; transition: 0.2s; }
+        .links a:hover { color: #00d2d3; font-weight: bold; }
+
+        .alert { color: #e74c3c; background: #fadbd8; padding: 12px; border-radius: 10px; margin-bottom: 20px; font-size: 14px; border: 1px solid #e74c3c; }
+    </style>
+</head>
+<body>
+    <div class="login-box">
+        <div class="logo"><i class="fas fa-unlock-alt"></i></div>
+        <h2>กู้คืนรหัสผ่าน</h2>
+        <p>กรอกข้อมูลเพื่อยืนยันตัวตน</p>
+        
+        <?php if($msg != "") echo "<div class='alert'><i class='fas fa-exclamation-triangle'></i> $msg</div>"; ?>
+        
+        <form method="post">
+            <div class="input-group">
+                <i class="fas fa-envelope"></i>
+                <input type="email" name="email" placeholder="อีเมล (Email) ที่ใช้สมัคร" required>
+            </div>
+
+            <div class="input-group">
+                <i class="fas fa-phone"></i>
+                <input type="text" name="phone" placeholder="เบอร์โทรศัพท์ (ยืนยันตัวตน)" required>
+            </div>
+
+            <div class="input-group">
+                <i class="fas fa-key"></i>
+                <input type="password" name="new_password" placeholder="ตั้งรหัสผ่านใหม่" required>
+            </div>
+            
+            <button type="submit" name="reset_pass" class="btn-reset">เปลี่ยนรหัสผ่านทันที</button>
+        </form>
+
+        <div class="links">
+            <a href="login.php"><i class="fas fa-arrow-left"></i> กลับหน้าเข้าสู่ระบบ</a>
+        </div>
+    </div>
+</body>
+</html>
